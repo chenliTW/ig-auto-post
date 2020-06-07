@@ -1,0 +1,274 @@
+<html>
+
+<head>
+
+    <title>IG自動發文系統</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jscolor/2.0.4/jscolor.js"></script>
+    <style>
+        .btn-file {
+            position: relative;
+            overflow: hidden;
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-file input[type=file] {
+            position: absolute;
+            top: 0;
+            right: 0;
+            min-width: 100%;
+            min-height: 100%;
+            font-size: 100px;
+            text-align: right;
+            filter: alpha(opacity=0);
+            opacity: 0;
+            outline: none;
+            background: white;
+            cursor: inherit;
+            display: block;
+        }
+
+        #img-upload {
+            width: 100%;
+            background-color: white;
+        }
+    </style>
+</head>
+
+<body style="background-color: #F1E4DA;">
+    <nav class="navbar navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">IG自動發文系統</a>
+    </nav>
+    <main class="container-md">
+        <br>
+        <div class="alert alert-secondary" role="alert">
+            <h4>版規:</h4>
+            <hr>
+            <strong>一、發表文章時之注意事項：</strong><br>
+            1. 嚴禁發表廣告、色情、暴力、恐怖、宗教或是政治等連結或內容。<br>
+            2. 嚴禁發表涉及人身攻擊、粗俗不堪、不雅之文字、挑釁或是謾罵等內容。<br>
+            3. 嚴禁發表個人測試用文章或散播不實消息之文章。<br>
+            4. 嚴禁發表指名道姓，請適時的刪減名子。<br>
+            5. 違反上述規則，張貼文章，應自負相關法律責任。<br>
+            6. 違反上述規則，管理員有權停止上傳者email PO 文 [3] 天。<br>
+            <strong>二、系統限制：</strong><br>
+            1. 發文前需以 [gmail] 信箱驗證。<br>
+            2. 每個 [gmail] 信箱一天只能留 [1] 次言。(現在爲測試版)<br>
+            3. 請理性對待此系統拜託不要攻擊我。<br>
+            4. 留言後會收到一則 email 裡面有傳送結果。<br>
+            <!-- 5. 因為IG會防堵機器人,留言可能會送不出去QQ,敬請寬容Orz。<br> -->
+            <!-- 5. 本系統使用 sightengine 偵測阻絕 不雅內容，若有誤判請回報。<br> -->
+            <!-- 6. bug report 與建議: <a href="">表單點我</a> -->
+        </div>
+        <div class="alert alert-primary" role="alert">
+            你的IP:{{user_ip}}
+        </div>
+        <div class="jumbotron">
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
+                    <h4 id="emailverify">1. email驗證</h4>
+                    <div class="row">
+                        <form action="./sendverificationcode#emailverify" class="form-inline" method="POST">
+                            <div class="form-group">
+                                <div class="col-xm-2 col-sm-2 col-md-2 col-lg-2">
+                                    email:
+                                </div>
+                                <div class="col-xm-6 col-sm-6 col-md-6 col-lg-6">
+                                    <input name="email" type="email" class="form-control"
+                                        {% if stat!=0 %}value="{{email}}" disabled{% else %} required {% endif %}>
+                                </div>
+                                <div class="col-xm-4 col-sm-4 col-md-4 col-lg-4">
+                                    <button id="sendcode" type="submit" class="btn btn-primary"
+                                        {% if stat!=0 %}disabled{% endif %}>取得驗證碼</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% if stat==0 %}
+                    {% if error==1 %}
+                    <div class="alert alert-danger" role="alert">
+                        只允許 @gmail.com 爲後綴的email
+                    </div>
+                    {% endif %}
+                    {% if error==2 %}
+                    <div class="alert alert-danger" role="alert">
+                        今天這個email已留 >= [1] 次言
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    <div id="verify" class="row">
+                        <form action="./verify#verify" class="form-inline" method="POST">
+                            <div class="form-group">
+                                <div class="col-xm-2 col-sm-2 col-md-2 col-lg-2">
+                                    驗證 :
+                                </div>
+                                <div class="col-xm-6 col-sm-6 col-md-6 col-lg-6">
+                                    <input name="verificationcode" type="text" class="form-control" {%if stat>1 %}
+                                        value="{{verificationcode}}" {%endif%} {% if stat!=1 %}disabled{% else %}
+                                        required {% endif %}>
+                                </div>
+                                <div class="col-xm-4 col-sm-4 col-md-4 col-lg-4">
+                                    <button type="submit" class="btn btn-primary"
+                                        {% if stat!=1 %}disabled{% endif %}>確認驗證碼</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% if stat==1 %}
+                    {% if error %}
+                    <div class="alert alert-danger" role="alert">
+                        驗證碼錯誤
+                    </div>
+                    {% endif %}
+                    {% endif %}
+                    <h4>2. 填寫留言內容</h4>
+                    <form action="./post#sussess" method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="text_placehold">留言內容：</label>&nbsp;&nbsp;&nbsp;&nbsp;
+                            <button id="genimgbut" type="button" onclick="genimg()" class="btn btn-primary btn-sm"
+                                {% if stat!=2 %}disabled{% endif %}>生成圖片</button>
+                            <textarea name="title" class="form-control" {% if stat>=2 %}
+                                style="font-size: 25px;resize: none;width: 200px;height: 200px;background-color: #496d89;color: #ffff00;"
+                                {% else %} style="width: 200px;height: 200px;" {% endif %} id="text_placehold"
+                                {% if stat!=2 %}disabled{% else %} required
+                                {% endif %}>{% if stat>2 %}{{title}} {% endif %}</textarea>
+                        </div>
+                        {% if stat==2 %}
+                        字體大小：<input id="font_size" value="25" min="15" max="80" type="number" style="width:150;"
+                            onchange="changefontsize()"><br>
+                        字體顏色：<input id="font_color" class="jscolor" value="ffff00" style="width:150;" onchange="changefontcolor()"><br>
+                        背景顏色：<input id="bg_color" class="jscolor" value="496d89" style="width:150;" onchange="changebgcolor()"><br>
+                        {% endif %}
+                </div>
+                <div class="col-xs-12 col-sm-12 col-md-12 col-lg-6">
+                    <h4>3. 上傳圖片(若不上傳可自動生成)</h4>
+                    <label>限png/jpeg/gif</label>
+                    <div class="input-group">
+                        <span class="input-group-btn">
+                            <span class="btn btn-default btn-file {% if stat!=2 %}disabled{% endif %}">
+                                選擇檔案… <input name="image" type="file" id="imgInp" {% if stat!=2 %}disabled{% endif %}>
+                                <input name="imageb64" id="imageb64" hidden="true" value="no">
+                            </span>
+                        </span>
+                        <input id="imgpath" type="text" class="form-control" readonly>
+                    </div>
+                    <img id='img-upload' {% if stat>2 %}src="data:image/png;base64, {{image}}"
+                        {% endif %}{% if stat==2 %}required{% endif %} />
+                </div>
+                <div class="col-md-12 text-center">
+                    <br>
+                    <div class="form-group form-check">
+                        <input id="agree" type="checkbox" class="form-check-input" id="Check1"
+                            {% if stat!=2 %}disabled{% else %} required {% endif %}>
+                        <label class="form-check-label" for="Check1">我已詳閱板規並且同意規定,如有違規應自負相關法律責任,管理員有權刪文並停止上傳者email PO 文
+                            [3] 天</label>
+                    </div>
+                    <!--
+                        <button name="noimg" type="submit" id="noimg" class="btn btn-primary"
+                        {% if stat!=2 %}disabled{% endif %}>
+                        匿名留言(不需上傳圖片)
+                        </button>
+                    -->
+                    <br>
+                    <button name="withimg" type="submit" id="withimg" class="btn btn-primary" disabled>
+                        上傳圖片並匿名留言
+                    </button>
+                </div>
+                </form>
+                {% if stat==3 %}
+                <div class="col-md-12 text-center">
+                    <br>
+                    <div id="sussess" class="alert alert-success" role="alert">
+                        留言成功!約莫十秒你將收到結果email
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous"></script>
+    <script>
+        $(document).ready(function () {
+            $(document).on('change', '.btn-file :file', function () {
+                var input = $(this),
+                    label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+                input.trigger('fileselect', [label]);
+            });
+
+            $('.btn-file :file').on('fileselect', function (event, label) {
+
+                var input = $(this).parents('.input-group').find(':text'),
+                    log = label;
+
+                if (input.length) {
+                    input.val(log);
+                } else {
+                    if (log) alert(log);
+                }
+
+            });
+            function readURL(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        $('#img-upload').attr('src', e.target.result);
+                    }
+
+                    reader.readAsDataURL(input.files[0]);
+                }
+            }
+
+            $("#imgInp").change(function () {
+                readURL(this);
+                document.getElementById('withimg').disabled = false;
+                document.getElementById("imageb64").setAttribute("value", "no");
+                $("#genimgbut")[0].innerText = "你已上傳圖片";
+                $("#genimgbut")[0].disabled = true;
+            });
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.js"></script>
+    <script>
+        function genimg() {
+            html2canvas(document.getElementById("text_placehold"), {
+                onrendered: function (canvas) {
+                    var ctx = canvas.getContext('2d');
+
+                    ctx.webkitImageSmoothingEnabled = false;
+                    ctx.mozImageSmoothingEnabled = false;
+                    ctx.imageSmoothingEnabled = false;
+
+                    var screenshot = canvas.toDataURL("image/png");
+
+                    document.getElementById("img-upload").setAttribute("src", screenshot);
+                    document.getElementById("imageb64").setAttribute("value", screenshot);
+                    $("#imgpath")[0].scrollIntoView();
+                }
+            });
+            document.getElementById("imgInp").value = "";
+            document.getElementById('withimg').disabled = false;
+            $('#imgpath')[0].value = "系統自動生成";
+        }
+        function changefontsize() {
+            $("#text_placehold")[0].style["font-size"] = $("#font_size")[0].value;
+        }
+        function changefontcolor(){
+            $("#text_placehold")[0].style["color"] = $("#font_color")[0].value;
+        }
+        function changebgcolor(){
+            $("#text_placehold")[0].style["background-color"] = $("#bg_color")[0].value;
+        }
+    </script>
+</body>
+
+</html>
